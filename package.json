@@ -1,0 +1,20 @@
+{
+  "name": "gog-games-tag-search",
+  "version": "1.0.0",
+  "description": "Tag-based search for GOG games powered by Typesense",
+  "scripts": {
+    "build": "node build.js",
+    "setup": "python3 -m venv venv && venv/bin/pip install -r requirements.txt",
+    "setup:windows": "python -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
+    "index": "venv/bin/python download-and-index-data.py"
+  },
+  "keywords": [
+    "typesense",
+    "search",
+    "gog",
+    "games"
+  ],
+  "author": "",
+  "license": "MIT"
+}
+

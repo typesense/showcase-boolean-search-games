@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="index.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-theme-classic"
+    />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@algolia/autocomplete-js"
+    ></script>
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/typesense@1/dist/typesense.min.js"
+    ></script>
+    <script>
+      // Inject Typesense URL and API key from environment variables (set in Vercel)
+      // This gets replaced by build.js during build, or defaults to localhost for local dev
+      window.TYPESENSE_URL = 'http://localhost:8108';
+      window.TYPESENSE_SEARCH_ONLY_API_KEY = 'xyz';
+    </script>
+    <script defer src="index.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
+      rel="stylesheet"
+    />
+    <title>GOG Games Search | Typesense</title>
+  </head>
+  <body>
+    <header>
+      <a
+        href="https://typesense.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >About Typesense</a
+      >
+      |
+      <a
+        href="https://github.com/yonoying/showcase-union-search"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Source code</a
+      >
+    </header>
+    <div class="heading">
+      <h1>GoG Games Tag Search</h1>
+      <h2>
+        powered by
+        <a
+          href="https://typesense.org/"
+          target="_blank"
+          rel="noopener noreferrer"
+          id="typesense"
+        >
+          type<b>sense|</b>
+        </a>
+        &
+        <a href="https://github.com/algolia/autocomplete" target="_blank">
+          Autocomplete.js
+        </a>
+      </h2>
+    </div>
+    <main>
+      <div id="autocomplete"></div>
+    </main>
+  </body>
+</html>
+
