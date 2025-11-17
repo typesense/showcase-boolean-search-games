@@ -1,0 +1,6 @@
+# Python virtual environment
+venv/
+
+# Typesense data directory
+typesense-data/
+
