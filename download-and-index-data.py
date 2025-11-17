@@ -59,21 +59,6 @@ typesense_client = Client({
 
 COLLECTION_NAME = 'gog_games'
 
-# Test the API key by trying to list collections (requires admin key)
-print("\nTesting API key permissions...")
-try:
-    collections = typesense_client.collections.retrieve()
-    print(f"✓ API key is valid! Found {len(collections)} existing collection(s).")
-except Exception as e:
-    if '401' in str(e) or 'Unauthorized' in str(e) or 'Forbidden' in str(e):
-        print("✗ ERROR: API key is invalid or doesn't have admin permissions!")
-        print("  Make sure you're using TYPESENSE_ADMIN_API_KEY (not TYPESENSE_SEARCH_ONLY_API_KEY)")
-        print("  The admin key is required for creating collections and indexing data.")
-        raise
-    else:
-        print(f"  Note: {e}")
-        print("  Continuing anyway...")
-
 # Download dataset
 print("Downloading dataset from Kaggle...")
 path = kagglehub.dataset_download("lunthu/gog-com-video-games-dataset")
