@@ -4,6 +4,8 @@ This demonstration showcases a tag-based search implementation powered by Typese
 
 In a search context, 'Tags' function as searchable keywords that enable precise document filtering and retrieval. In this implementation, any indexed field within a document can serve as a tag to refine search results. The interface provides an autocompleting search input that suggests tag completions across multiple fields in real-time. Users may select suggested completions from the dropdown menu or manually enter tags as "All Fields" queries, which are processed as conventional text search terms across all indexed fields.
 
+The live demo can be found [here](https://boolean-search-games.typesense.org/).
+
 ## Setup
 
 1. Install Node.js dependencies (for build scripts):
@@ -36,10 +38,11 @@ docker compose up
 # For local development (uses default 'xyz' key):
 npm run index
 
-# For production Typesense cluster, set the admin API key and connection details:
+# For production Typesense cluster, set the admin API key and connection details before running:
 export TYPESENSE_ADMIN_API_KEY=your_admin_key_here
 export TYPESENSE_PORT=443
 export TYPESENSE_PROTOCOL=https
+
 # For single-node cluster
 export TYPESENSE_HOST=your-cluster.a1.typesense.net  
 # For HA cluster
@@ -47,7 +50,6 @@ export TYPESENSE_HOST_NEAREST=your-cluster.a1.typesense.net
 export TYPESENSE_HOST=your-cluster-1.a1.typesense.net
 export TYPESENSE_HOST_2=your-cluster-2.a1.typesense.net
 export TYPESENSE_HOST_3=your-cluster-3.a1.typesense.net
-npm run index
 ```
 
 3. Open the `index.html` file in the root of this repo in a web browser.
