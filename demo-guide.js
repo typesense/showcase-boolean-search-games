@@ -9,16 +9,16 @@ window.updateGuidingText = function() {
     { value: 'Role-playing', fieldType: 'genres' },
     { value: 'THQ Nordic GmbH', fieldType: 'publisher' },
     { value: 'Action', fieldType: 'genres' },
-    { value: 'Dark', fieldType: undefined },
-    { value: '2', fieldType: undefined }
+    { value: 'Dark', fieldType: 'undefined' },
+    { value: '2', fieldType: 'undefined' }
   ];
   
   const hasElectronicArts = window.tags.some(t => t.value === 'Electronic Arts' && t.fieldType === 'publisher');
   const hasRolePlaying = window.tags.some(t => t.value === 'Role-playing' && t.fieldType === 'genres');
   const hasTHQNordic = window.tags.some(t => t.value === 'THQ Nordic GmbH' && t.fieldType === 'publisher');
   const hasAction = window.tags.some(t => t.value === 'Action' && t.fieldType === 'genres');
-  const hasDark = window.tags.some(t => t.value === 'Dark' && t.fieldType === undefined);
-  const has2 = window.tags.some(t => t.value === '2' && t.fieldType === undefined);
+  const hasDark = window.tags.some(t => t.value === 'Dark' && t.fieldType === 'undefined');
+  const has2 = window.tags.some(t => t.value === '2' && t.fieldType === 'undefined');
   
   const allGuideTagsPresent = hasElectronicArts && hasRolePlaying && hasTHQNordic && hasAction && hasDark && has2;
   

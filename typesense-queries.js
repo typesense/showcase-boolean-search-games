@@ -107,7 +107,8 @@ window.determineFieldType = function(item, query) {
 // collectFieldMatches checks string fields (developer, publisher, title) independently. 
 // addAutocompleteItem prevents duplicates and limits items per field type,
 
-window.collectArrayMatches = function(hit, query, fieldType, byCategory, seen, maxItems) {
+window.collectArrayMatches = function(hit, query, fieldType, byCategory, seen, maxItems) { 
+  // byCategory: groups by field type for sorting; maxItems: limits per category
   const { document: doc } = hit;
   const arr = doc[fieldType];
   if (!Array.isArray(arr)) return;
@@ -122,7 +123,8 @@ window.collectArrayMatches = function(hit, query, fieldType, byCategory, seen, m
 // Typesense uses Highlights to mark matching query terms with <b> tags. 
 // Each highlight object contains { field: 'fieldName', value: 'text with <b>matched</b> terms' }
 
-window.collectFieldMatches = function(hit, query, byCategory, seen) {
+window.collectFieldMatches = function(hit, query, byCategory, seen) { 
+  // byCategory: groups by field type for sorting
   const { highlights, document: doc } = hit;
   const queryLower = query.toLowerCase();
   
@@ -131,11 +133,11 @@ window.collectFieldMatches = function(hit, query, byCategory, seen) {
   fieldsToCheck.forEach(fieldType => {
     const value = doc[fieldType];
     if (!value || typeof value !== 'string') return;
-    
+  
     if (value.toLowerCase().includes(queryLower)) {
       const highlight = highlights?.find(h => h.field === fieldType);
       const displayValue = highlight ? getFieldValue(doc, highlights, fieldType) : value;
-      
+  
       if (displayValue?.trim()) {
         addAutocompleteItem(byCategory, seen, hit, fieldType, displayValue, 3);
       }
@@ -143,7 +145,8 @@ window.collectFieldMatches = function(hit, query, byCategory, seen) {
   });
 }
 
-window.addAutocompleteItem = function(byCategory, seen, hit, fieldType, value, maxItems = 3) {
+window.addAutocompleteItem = function(byCategory, seen, hit, fieldType, value, maxItems = 3) { 
+  // byCategory: groups by field type for sorting; maxItems: limits per category
   const key = `${fieldType}:${String(value).trim().toLowerCase()}`;
   if (seen.has(key)) return;
   
@@ -243,10 +246,10 @@ window.generateSearchQueries = function(tags) {
   const excludeTags = tags.filter(t => t.excludeChecked);
   const queryTags = tags.filter(t => !t.excludeChecked);
   
-  const definedTags = queryTags.filter(t => t.fieldType);
-  const undefinedTags = queryTags.filter(t => !t.fieldType);
-  const definedExcludeTags = excludeTags.filter(t => t.fieldType);
-  const undefinedExcludeTags = excludeTags.filter(t => !t.fieldType);
+  const definedTags = queryTags.filter(t => t.fieldType && t.fieldType !== 'undefined');
+  const undefinedTags = queryTags.filter(t => t.fieldType === 'undefined');
+  const definedExcludeTags = excludeTags.filter(t => t.fieldType && t.fieldType !== 'undefined');
+  const undefinedExcludeTags = excludeTags.filter(t => t.fieldType === 'undefined');
   
   // Group defined-type tags into an object for constructing filters
   const definedByField = {};

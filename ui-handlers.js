@@ -2,11 +2,6 @@
 
 const { autocomplete } = window['@algolia/autocomplete-js'];
 
-// Extracts the display value for an autocomplete item
-window.getDisplayValue = function(item, state) {
-  return item._value;
-};
-
 // Setup enter key handler for autocomplete input
 window.setupEnterKeyHandler = function() {
   setTimeout(() => {
@@ -26,7 +21,7 @@ window.setupEnterKeyHandler = function() {
             }
             
             e.preventDefault();
-            window.addTag(query, undefined);
+            window.addTag(query, 'undefined');
             autocompleteInput.value = '';
             if (panel) {
               panel.style.display = 'none';
@@ -48,6 +43,7 @@ window.addTag = function(value, fieldType) {
     fieldType,
     excludeChecked: false
   });
+  window.pendingGuideLinkField = null; // Reset guide link field after adding tag
   window.renderTags();
   window.updateGuidingText(); // Update the guiding text to show the user what to try next
   window.loadResults();
@@ -59,7 +55,7 @@ window.renderTags = function() {
   
   const tagsByType = {};
   window.tags.forEach(tag => {
-    const key = tag.fieldType ?? 'undefined';
+    const key = tag.fieldType || 'undefined';
     if (!tagsByType[key]) {
       tagsByType[key] = [];
     }
@@ -141,13 +137,9 @@ window.removeTag = function(id) {
 };
 
 // Remove tags all tags of a set type, and update the guiding text
-window.removeTagsByType = function(fieldType) {
+  window.removeTagsByType = function(fieldType) {
   window.tags = window.tags.filter(t => {
-    if (fieldType === 'undefined') {
-      return t.fieldType !== undefined && t.fieldType !== null;
-    } else {
-      return t.fieldType !== fieldType;
-    }
+    return t.fieldType !== fieldType;
   });
   window.renderTags();
   window.updateGuidingText();
@@ -269,7 +261,7 @@ autocomplete({
       sourceId: 'predictions',
       getItems() {
         const seen = new Set();
-        const byCategory = {};
+        const byCategory = {}; // Dict to group suggestions by field type for sorting & limiting the number of tags of the same type.
         const queryLower = query.toLowerCase();
         
         results.hits.forEach(hit => {
@@ -279,16 +271,19 @@ autocomplete({
           window.collectFieldMatches(hit, query, byCategory, seen);
         });
         
-        const items = window.fieldPriority
+        const items = window.fieldPriority // Sort by fieldPriority for better UX 
           .filter(fieldType => byCategory[fieldType])
           .flatMap(fieldType => byCategory[fieldType]);
         
         // Adding guide link text when the user clicks on "Try: ..." suggestion tags
+        // Check explicitly for null (not undefined) since guide links can set it to undefined (the value)
         if (window.pendingGuideLinkField !== null) {
-          const fieldType = window.pendingGuideLinkField;
-          const fieldLabel = fieldType === undefined ? 'all fields' : window.fieldLabels[fieldType];
+          const fieldType = window.pendingGuideLinkField === undefined ? 'undefined' : (window.pendingGuideLinkField || 'undefined');
+          const fieldLabel = fieldType === 'undefined' ? 'all fields' : window.fieldLabels[fieldType];
           items.unshift({ 
             isGuideLinkTag: true, 
+            _fieldType: fieldType,
+            _value: query,
             query, 
             fieldType,
             label: `${query} - Click to add ${fieldLabel} tag`,
@@ -301,7 +296,7 @@ autocomplete({
           items.forEach((item, index) => {
             if (index === 0 || item.isGuideLinkTag) return;
             
-            const itemFieldType = item._fieldType || window.determineFieldType(item, query);
+            const itemFieldType = item._fieldType;
             if (itemFieldType === fieldType) {
               let itemValue = item._value;
               if (!itemValue) {
@@ -318,75 +313,63 @@ autocomplete({
           });
           
           itemsToRemove.reverse().forEach(index => items.splice(index, 1));
-        } else if (query?.trim() && !window.tags.some(t => t.value.toLowerCase() === queryLower)) {
-          items.push({ isUndefinedTag: true, query });
+        }
+        
+        // Always check for undefined suggestion, regardless of pendingGuideLinkField
+        if (query?.trim() && !window.tags.some(t => t.value.toLowerCase() === queryLower && t.fieldType === 'undefined')) {
+          // Only add undefined suggestion if we don't already have a guide link tag for this exact query
+          const hasGuideLinkForQuery = items.some(item => 
+            item.isGuideLinkTag && 
+            item._fieldType === 'undefined' && 
+            item._value?.toLowerCase() === queryLower
+          );
+          if (!hasGuideLinkForQuery) {
+            items.push({ _fieldType: 'undefined', _value: query, query });
+          }
         }
         
         return items;
       },
       onSelect({ item, state }) {
         if (item.isGuideLinkTag) {
-          window.addTag(item.query || state.query, item.fieldType);
+          window.addTag(item._value || item.query || state.query, item._fieldType);
           window.pendingGuideLinkField = null;
-          state.setQuery('');
+          if (state.setQuery) state.setQuery('');
           return;
         }
         
-        if (item.isUndefinedTag) {
-          window.addTag(item.query || state.query, undefined);
-          window.pendingGuideLinkField = null;
-          state.setQuery('');
-          return;
-        }
-        
-        // For regular autocomplete items: determines field type, extracts value from document/highlights 
-        // (using getArrayValue for array fields, getFieldValue for strings), then adds the tag and clears the input
-        const fieldType = item._fieldType || window.determineFieldType(item, state.query);
-        let value = item._value;
-        if (!value) {
-          if (fieldType === 'genres' || fieldType === 'supportedOperatingSystems') {
-            value = window.getArrayValue(item.document, item.highlights, fieldType, state.query);
-          } else {
-            value = window.getFieldValue(item.document, item.highlights, fieldType);
-          }
-        }
+        const fieldType = item._fieldType;
+        const value = item._value;
         
         if (value?.trim()) {
           window.addTag(String(value).trim(), fieldType);
         }
         window.pendingGuideLinkField = null;
-        state.setQuery('');
+        if (state.setQuery) state.setQuery('');
       },
       getItemInputValue: () => '',
       // HTML templates for the autocomplete suggestions list
       templates: {
         item({ item, html, state }) {
-          if (item.isGuideLinkTag) {
-            const fieldType = item.fieldType;
-            const fieldLabel = fieldType === undefined ? 'all fields' : window.fieldLabels[fieldType];
-            return html`<div class="suggestion-item">
-              <span class="suggestion-value">${item.queryValue} - <span class="click-to-add-text">${item.clickToAddText}</span></span>
-              <span class="field-badge field-${fieldType || 'undefined'}">${fieldLabel}</span>
-            </div>`;
-          }
-          
-          if (item.isUndefinedTag) {
-            return html`<div class="suggestion-item">
-              <span class="suggestion-value">${state.query}</span>
-              <span class="field-badge">all fields</span>
-            </div>`;
-          }
-          
-          const fieldType = item._fieldType || window.determineFieldType(item, state.query);
-          const value = window.getDisplayValue(item, state);
+          const fieldType = item._fieldType || 'undefined';
+          const value = item._value;
           
           if (!value?.trim()) {
             return html`<div style="display: none;"></div>`;
           }
           
+          const fieldLabel = fieldType === 'undefined' ? 'all fields' : window.fieldLabels[fieldType];
+          
+          if (item.isGuideLinkTag) {
+            return html`<div class="suggestion-item">
+              <span class="suggestion-value">${value} - <span class="click-to-add-text">${item.clickToAddText}</span></span>
+              <span class="field-badge field-${fieldType}">${fieldLabel}</span>
+            </div>`;
+          }
+          
           return html`<div class="suggestion-item">
-            <span class="suggestion-value" dangerouslySetInnerHTML=${{ __html: value }}></span>
-            <span class="field-badge field-${fieldType}">${window.fieldLabels[fieldType]}</span>
+            <span class="suggestion-value">${value}</span>
+            <span class="field-badge field-${fieldType}">${fieldLabel}</span>
           </div>`;
         },
         noResults({ state, html }) {
