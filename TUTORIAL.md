@@ -1,6 +1,6 @@
 # Boolean Tag Search
 
-A common use case for search engines is to filter datasets based on simple boolean logic. Typesense supports queries like this by allowing for boolean expressions in the `filter_by` property. However, since the `filter_by` property only supports exact matches, this can mean trading off some of the flexibility of full-text search. One natural way around this problem is to implement an experience called a tag search. This cookbook will demonstrate the use case and process of building a tag-based search interface with Typesense.
+A common use case for search engines is to filter datasets based on simple boolean logic. Typesense supports queries like this by allowing for boolean expressions in the `filter_by` property. However, since the `filter_by` property only supports exact matches, this can mean trading off some of the flexibility of full-text search. One natural way around this problem is to implement an experience called a tag search. This cookbook will demonstrate the use case for a tag based search experience, and show you how to build one.
 
 ## Overview
 
@@ -108,15 +108,7 @@ autocomplete({
     // Process and return suggestions...
   },
 });
-```
 
-### Retrieve Suggestions
-
-Now we'll create a function that queries Typesense when the user types. We'll use highlights to identify which fields matched the query, which will help us organize the suggestions by field type.
-
-**Reference:** [typesense-queries.js:31-53](https://github.com/typesense/showcase-tag-search/blob/main/typesense-queries.js#L31-L53)
-
-```javascript
 async function searchAutocomplete(query) {
   if (!query?.trim()) return null;
   
@@ -143,9 +135,7 @@ async function searchAutocomplete(query) {
 
 ### Process and Sort Results
 
-Next, we'll process the search results to extract matching values from different fields. We'll iterate through each hit and collect matches from array fields (like genres) and string fields (like title, developer, publisher). We use a 'seen' set to track tag values we have already added. This means if a query matches two documents on the same field, with the same value (eg: two games both made by the same publisher), then we will only add that tag once.
-
-**Reference:** [ui-handlers.js:270-280](https://github.com/typesense/showcase-tag-search/blob/main/ui-handlers.js#L270-L280)
+Next we'll process the search results to extract matching values from different fields. We'll iterate through each hit and collect matches from array fields (like genres) and string fields (like title, developer, publisher). We'll use a 'seen' set to track tag values we have already added. This is so that if a query matches two documents on the same field, with the same value (eg: two games both made by the same publisher), then we will only add that tag once.
 
 ```javascript
 autocomplete({
@@ -182,11 +172,7 @@ autocomplete({
 });
 ```
 
-### Helper Functions
-
-We'll implement the helper functions from the code above to extract values from search results. These functions will handle both array fields (genres, supportedOperatingSystems) and string fields (title, developer, publisher).
-
-**Reference:** [typesense-queries.js:110-155](https://github.com/typesense/showcase-tag-search/blob/main/typesense-queries.js#L110-L155)
+The helper functions from the code above to extract values from search results:
 
 ```javascript
 // Process array fields (e.g., genres, supportedOperatingSystems)
@@ -240,13 +226,9 @@ function getFieldValue(doc, highlights, field) {
 }
 ```
 
-**Reference:** [typesense-queries.js:56-59](https://github.com/typesense/showcase-tag-search/blob/main/typesense-queries.js#L56-L59)
-
 ### Display Suggestions in Autocomplete
 
-Now we'll wire up the autocomplete component to display our processed results. We use a `templates.item` function to render each suggestion. The template displays the matching value and a field badge showing which field the tag belongs to (genre, title, developer, etc.). This helps users understand what type of tag they're selecting.
-
-**Reference:** [ui-handlers.js:270-325](https://github.com/typesense/showcase-tag-search/blob/main/ui-handlers.js#L270-L325)
+Now we'll wire up the autocomplete component to display our processed results. We use a `templates.item` function to render each suggestion. The template displays the matching value and a field badge (defined in our css file) showing which field the tag belongs to. This helps users understand what type of tag they're selecting.
 
 ```javascript
 autocomplete({
@@ -294,13 +276,7 @@ autocomplete({
 
 ## 2. Add Selection to Tag Cloud
 
-Now we'll implement the tag cloud functionality. When a user selects a suggestion from the autocomplete, we'll store it as a tag and display it in a tag cloud UI.
-
-### On Selection
-
-We'll create a function that adds the selected item to our tags array and triggers a re-render of the tag cloud display, and call it from the onSelect function of autocomplete.
-
-**Reference:** [ui-handlers.js:42-51](https://github.com/typesense/showcase-tag-search/blob/main/ui-handlers.js#L42-L51)
+Now we'll implement the tag cloud functionality. When a user selects a suggestion from the autocomplete, we'll store it as a tag and display it in a tag cloud UI. To do this we'll create a function that adds the selected item to our tags array and triggers a re-render of the tag cloud display, and call it from the onSelect function of autocomplete.
 
 ```javascript
 function addTag(value, fieldType) {
@@ -343,11 +319,7 @@ autocomplete({
 });
 ```
 
-### Render Tags Helper
-
-We'll use this function in the above code to render the tags in the UI, grouping them by field type so users can see which tags apply to which fields.
-
-**Reference:** [ui-handlers.js:56-99](https://github.com/typesense/showcase-tag-search/blob/main/ui-handlers.js#L56-L99)
+We'll use this function in the above code to render the tags in the UI, grouping them by field type so users can see which tags apply to which fields:
 
 ```javascript
 function renderTags() {
@@ -393,8 +365,6 @@ We'll create a function that converts tags with field types into Typesense filte
 
 This is the part of the code where we construct our boolean search expression. In our case we are OR-ing all values of the same field type into a shared clause, and AND-ing all of those clauses together. But this logic could be any valid boolean equation, as defined by the filter_by docs [here](https://typesense.org/docs/29.0/api/search.html#filter-parameters)
 
-**Reference:** [typesense-queries.js:163-189](https://github.com/typesense/showcase-tag-search/blob/main/typesense-queries.js#L163-L189)
-
 ```javascript
 function buildDefinedFilters(tags) {
   const allFieldTypes = Object.keys(tags);
@@ -429,9 +399,7 @@ function escapeFilterValue(value) {
 
 ### Generate Search Queries
 
-Next we'll combine the defined filters and undefined queries into complete Typesense search query objects. We'll handle two cases: no undefined tags (only filters), or multiple undefined tags (multiple queries that we'll union together).
-
-**Reference:** [typesense-queries.js:238-316](https://github.com/typesense/showcase-tag-search/blob/main/typesense-queries.js#L238-L316)
+Next we'll combine the defined and undefined tags into complete Typesense search query objects. We'll handle two cases: no undefined tags (only filters), or multiple undefined tags (multiple queries that we'll union together).
 
 ```javascript
 function generateSearchQueries(tags) {
@@ -508,8 +476,6 @@ function buildQueryObject(queryString, filterBy, hasUndefinedQuery) {
 
 Finally, we'll execute the generated queries using Typesense's multiSearch API. This allows us to handle multiple queries and union the results together, which allows us to get OR logic when we have multiple "all fields" tags.
 
-**Reference:** [ui-handlers.js:218-225](https://github.com/typesense/showcase-tag-search/blob/main/ui-handlers.js#L218-L225)
-
 ```javascript
 async function loadResults(page = 1) {
   if (!tags.length) return clearResults();
@@ -545,13 +511,6 @@ window.addTag = function(value, fieldType) {
 };
 ```
 
-## Summary
+This should return a list of results each time we add a new tag, filtered according to the boolean search logic we defined above. 
 
-In this tutorial, we've built a tag-based search interface with the following flow:
-
-1. **Autocomplete**: We query Typesense as users type and extract matching values from highlights to show suggestions
-2. **Tag Storage**: We store selected tags with their field types in an array
-3. **Query Building**: We convert tags into Typesense filters (for defined fields) and search queries (for undefined/all fields)
-4. **Execution**: We run the queries using multiSearch and display the results
-
-The key concept is that tags with a `fieldType` become `filter_by` clauses, while tags without a `fieldType` become full-text search queries across all fields.
+The live demo includes some extra logic such as the ability to toggle whether tags of the same field type are Or-ed together or AND-ed together, and the option to exclude a tag from your search rather than include it. Both cases require aditional logic in the `buildDefinedFilters` function, and show how the boolean search lgoic can be customized beyond what is shown in this example tutorial.
