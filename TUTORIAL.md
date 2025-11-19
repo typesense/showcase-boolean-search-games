@@ -1,6 +1,6 @@
 # Boolean Tag Search
 
-A common use case for search engines is to filter datasets based on simple boolean logic. Typesense supports queries like this by allowing for boolean expressions in the `filter_by` property. However, since the `filter_by` property only supports exact matches, this can mean trading off some of the flexibility of full-text search. One natural way around this problem is to implement an experience called a tag search. This cookbook will demonstrate the use case for a tag based search experience, and show you how to build one.
+A common use case for search engines is to filter datasets based on simple boolean logic. Typesense supports queries like this by allowing for boolean expressions in the `filter_by` property. However, since the `filter_by` property only supports exact matches, this can mean trading off some of the flexibility of full-text search. One natural way around this problem is to implement an experience called a tag search. This cookbook will demonstrate the use case for a tag-based search experience, and show you how to build one.
 
 ## Overview
 
@@ -55,11 +55,11 @@ The data flow for a tag-based search interface is as follows:
 
 ### Live Demo
 
-A live demo for this cookbook can be found [here](https://boolean-search-games.typesense.org/). The full demo features some additional functionality not covered here to reduce code complexity, like showing a list of demo commands and haveing an option to exclude a tag once it has been added.
+A live demo for this cookbook can be found [here](https://boolean-search-games.typesense.org/). The full demo features some additional functionality not covered here to reduce code complexity, like showing a list of demo commands and having an option to exclude a tag once it has been added.
 
 ## Setup
 
-Before implementing any search logic we'll initialize the Typesense client and define the fields we want to search across, as well as some utility varables like fieldPriority and an array for the tags.
+Before implementing any search logic we'll initialize the Typesense client and define the fields we want to search across, as well as some utility variables like fieldPriority and an array for the tags.
 
 ```javascript
 // Initialize Typesense client
@@ -90,7 +90,7 @@ let tagIdCounter = 0;
 
 ## 1. Retrieve and Sort Autocompleted Tag Suggestions
 
-We will start by creating a search box that users can type into to find Tags to filter by. To find potential Tags we will use a normal query_by request to our games table, and will then sort through the results to construct a list of possible tags relating to different fields.
+We will start by creating a search box that users can type into to find tags to filter by. To find potential tags we will use a normal query_by request to our games table, and will then sort through the results to construct a list of possible tags relating to different fields.
 
 ### Search Box Setup
 
@@ -166,13 +166,13 @@ autocomplete({
   
       return items;
     },
-    ... // Later functions for getSelected, etc 
+    ... // Later functions for getSelected, etc.
     }];
   },
 });
 ```
 
-The helper functions from the code above to extract values from search results:
+Here are the helper functions used in the code above to extract values from search results:
 
 ```javascript
 // Process array fields (e.g., genres, supportedOperatingSystems)
@@ -439,7 +439,7 @@ function generateSearchQueries(tags) {
     const queryString = '*';
     return [buildQueryObject(queryString, filterBy, false)];
   } else {
-    // Could have multiple undefined tags - create separate queries for each
+    // If there are multiple undefined tags, create separate queries for each
     return undefinedQueryValues.map(undefinedValue => {
       const allFilterParts = [];
       if (definedFilterBy) {
@@ -513,4 +513,4 @@ window.addTag = function(value, fieldType) {
 
 This should return a list of results each time we add a new tag, filtered according to the boolean search logic we defined above. 
 
-The live demo includes some extra logic such as the ability to toggle whether tags of the same field type are Or-ed together or AND-ed together, and the option to exclude a tag from your search rather than include it. Both cases require aditional logic in the `buildDefinedFilters` function, and show how the boolean search logic can be customized beyond what is shown in this example tutorial.
+The live demo includes some extra logic such as the ability to toggle whether tags of the same field type are OR-ed together or AND-ed together, and the option to exclude a tag from your search rather than include it. Both cases require additional logic in the `buildDefinedFilters` function, and show how the boolean search logic can be customized beyond what is shown in this example tutorial.
