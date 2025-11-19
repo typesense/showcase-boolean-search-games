@@ -513,4 +513,4 @@ window.addTag = function(value, fieldType) {
 
 This should return a list of results each time we add a new tag, filtered according to the boolean search logic we defined above. 
 
-The live demo includes some extra logic such as the ability to toggle whether tags of the same field type are Or-ed together or AND-ed together, and the option to exclude a tag from your search rather than include it. Both cases require aditional logic in the `buildDefinedFilters` function, and show how the boolean search lgoic can be customized beyond what is shown in this example tutorial.
+The live demo includes some extra logic such as the ability to toggle whether tags of the same field type are Or-ed together or AND-ed together, and the option to exclude a tag from your search rather than include it. Both cases require aditional logic in the `buildDefinedFilters` function, and show how the boolean search logic can be customized beyond what is shown in this example tutorial.
